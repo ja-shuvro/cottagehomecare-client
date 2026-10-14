@@ -9,6 +9,7 @@ import { NotesPage } from './pages/NotesPage';
 import { AdminPage } from './pages/AdminPage';
 import { InterestsPage } from './pages/InterestsPage';
 import { PostsPage } from './pages/PostsPage';
+import { SecurityPage } from './pages/SecurityPage';
 
 export const App: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ export const App: React.FC = () => {
               {/* Public Routes */}
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              <Route path="/security-updates" element={<SecurityPage />} />
 
               {/* Protected User Routes */}
               <Route
