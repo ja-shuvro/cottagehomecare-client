@@ -1,5 +1,4 @@
 import type { ApiResponse } from '../types';
-const API_BASE = import.meta.env.VITE_API_BASE_URL || '/api';
 
 interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
@@ -11,7 +10,11 @@ export async function apiFetch<T>(
 ): Promise<ApiResponse<T>> {
   const { params, headers, ...customConfig } = options;
 
-  let url = `${API_BASE}${endpoint}`;
+  let base = (import.meta.env.VITE_API_BASE_URL || '/api').trim();
+  base = base.replace(/\/+$/, '');
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  let url = `${base}${cleanEndpoint}`;
+
   if (params) {
     const searchParams = new URLSearchParams();
     Object.entries(params).forEach(([key, val]) => {
@@ -39,7 +42,9 @@ export async function apiFetch<T>(
     },
   });
 
-  const data = await response.json();
+  const contentType = response.headers.get('content-type') || '';
+  const isJson = contentType.includes('application/json');
+  const data = isJson ? await response.json() : null;
 
   if (!response.ok) {
     if (response.status === 401 && !endpoint.includes('/auth/login')) {
@@ -47,8 +52,9 @@ export async function apiFetch<T>(
       localStorage.removeItem('user');
       window.dispatchEvent(new Event('auth-expired'));
     }
-    throw new Error(data.message || 'An unexpected error occurred');
+    const errorMsg = data?.message || (await response.text().catch(() => '')) || `Request failed (${response.status})`;
+    throw new Error(errorMsg);
   }
 
-  return data;
+  return data as ApiResponse<T>;
 }
